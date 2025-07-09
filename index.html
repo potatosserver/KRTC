@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高雄捷運查詢器</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Inter 字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e8f0fe; /* Material-like light blue background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+        }
+        /* 自定義滾動條樣式 - 保持不變，因為這是瀏覽器層級的樣式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-blue-50 flex items-center justify-center min-h-screen p-4">
+    <!-- Main container styled as a Material 3 card -->
+    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-blue-100">
+        <h1 class="text-3xl font-bold text-center text-blue-800 mb-6">高雄捷運查詢</h1>
+
+        <!-- 站點選擇器 -->
+        <div class="mb-5">
+            <label for="station-select" class="block text-gray-700 text-sm font-semibold mb-2">選擇捷運站點:</label>
+            <select id="station-select" class="block w-full px-4 py-3 border border-blue-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-blue-50 transition duration-200 ease-in-out appearance-none cursor-pointer">
+                <!-- 選項將由 JavaScript 動態填充 -->
+            </select>
+        </div>
+
+        <!-- 查詢結果顯示區 -->
+        <div class="mt-6 border border-blue-200 bg-blue-50 p-4 rounded-xl min-h-[120px] max-h-96 overflow-y-auto relative shadow-inner">
+            <h2 class="text-lg font-semibold text-blue-700 mb-3 border-b-2 border-blue-300 pb-2">查詢結果:</h2>
+            <!-- 結果將以表格形式顯示在此 -->
+            <div id="results-display" class="text-gray-800 text-sm"></div>
+            
+            <!-- 錯誤/訊息提示框 -->
+            <div id="message-box" class="hidden absolute top-0 left-0 w-full h-full bg-red-100 bg-opacity-90 flex items-center justify-center rounded-xl p-4 text-red-700 text-center font-medium border border-red-300">
+                <span id="message-text"></span>
+                <button id="close-message" class="absolute top-2 right-2 text-red-600 hover:text-red-800 text-xl font-bold">&times;</button>
+            </div>
+        </div>
+
+        <!-- 立即更新按鈕 (現在顯示倒數計時) -->
+        <div class="flex justify-center mt-6">
+            <button id="manual-update-button" class="w-full max-w-xs bg-blue-600 text-white py-3 px-6 rounded-full font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg">
+                <!-- SVG refresh icon (Updated for better aesthetics) -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 4v6h-6"></path>
+                    <path d="M1 20v-6h6"></path>
+                    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"></path>
+                </svg>
+                <span id="countdown-text">30秒後更新</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM 內容載入完成後執行
+        document.addEventListener('DOMContentLoaded', () => {
+            // 獲取 HTML 元素
+            const stationSelect = document.getElementById('station-select');
+            const manualUpdateButton = document.getElementById('manual-update-button'); 
+            const countdownText = document.getElementById('countdown-text'); // 倒數計時文字顯示
+            const resultsDisplay = document.getElementById('results-display');
+            const messageBox = document.getElementById('message-box');
+            const messageText = document.getElementById('message-text');
+            const closeMessageButton = document.getElementById('close-message');
+
+            let autoUpdateInterval; // 用於儲存自動更新的計時器 ID (現在也負責倒數)
+            let currentCountdown = 30; // 追蹤目前的倒數值
+            const UPDATE_INTERVAL = 30; // 自動更新間隔，單位：秒
+
+            // 高雄捷運站點代碼及其名稱
+            // 這些是常見的紅線和橘線站點，用於示範
+            const stations = {
+                "R3": "小港", "R4": "高雄國際機場", "R4A": "草衙", "R5": "前鎮高中", "R6": "凱旋",
+                "R7": "獅甲", "R8": "三多商圈", "R9": "中央公園", "R10": "美麗島", "R11": "高雄車站",
+                "R12": "後驛", "R13": "凹子底", "R14": "巨蛋", "R15": "生態園區", "R16": "左營",
+                "R17": "世運", "R19": "楠梓加工區", "R20": "後勁", "R21": "都會公園", "R22": "青埔",
+                "R22A": "橋頭糖廠", "R23": "橋頭火車站", "R24": "岡山高醫","RK1": "岡山車站",
+                "O1": "西子灣", "O2": "鹽埕埔", "O4": "市議會", "O5": "美麗島", "O6": "信義國小",
+                "O7": "文化中心", "O8": "五塊厝", "O9": "技擊館", "O10": "衛武營", "O11": "鳳山西",
+                "O12": "鳳山", "O13": "大東", "O14": "捷運大寮"
+            };
+
+            // 填充站點選擇器
+            for (const code in stations) {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = `${code} - ${stations[code]}`;
+                stationSelect.appendChild(option);
+            }
+
+            /**
+             * 顯示訊息框
+             * @param {string} message 要顯示的訊息
+             * @param {string} type 訊息類型 ('success', 'error', 'info')，用於樣式調整
+             */
+            function showMessage(message, type = 'info') {
+                messageText.textContent = message;
+                messageBox.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'bg-blue-100', 'border-red-300', 'border-green-300', 'border-blue-300', 'text-red-700', 'text-green-700', 'text-blue-700');
+                
+                if (type === 'error') {
+                    messageBox.classList.add('bg-red-100', 'border-red-300', 'text-red-700');
+                } else if (type === 'success') {
+                    messageBox.classList.add('bg-green-100', 'border-green-300', 'text-green-700');
+                } else { // info
+                    messageBox.classList.add('bg-blue-100', 'border-blue-300', 'text-blue-700');
+                }
+                messageBox.classList.remove('hidden');
+                resultsDisplay.classList.add('hidden'); // 隱藏結果顯示區
+            }
+
+            /**
+             * 隱藏訊息框
+             */
+            function hideMessageBox() {
+                messageBox.classList.add('hidden');
+                resultsDisplay.classList.remove('hidden'); // 重新顯示結果顯示區
+            }
+
+            // 關閉訊息框按鈕的事件監聽器
+            closeMessageButton.addEventListener('click', hideMessageBox);
+
+            /**
+             * 更新倒數計時器顯示
+             */
+            function updateCountdownDisplay() {
+                manualUpdateButton.disabled = false; // 確保按鈕在倒數時是可點擊的
+                manualUpdateButton.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                if (currentCountdown <= 0) {
+                    countdownText.textContent = `更新中...`; // 顯示更新中
+                    manualUpdateButton.disabled = true; // 禁用按鈕防止重複點擊
+                    manualUpdateButton.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    countdownText.textContent = `${currentCountdown}秒後更新`;
+                }
+            }
+
+            /**
+             * 啟動或重置自動更新和倒數計時器
+             */
+            function startAutoUpdateAndCountdown() {
+                clearInterval(autoUpdateInterval); // 清除任何現有的計時器
+                currentCountdown = UPDATE_INTERVAL; // 重置倒數
+                updateCountdownDisplay(); // 立即更新顯示
+
+                autoUpdateInterval = setInterval(() => {
+                    currentCountdown--;
+                    updateCountdownDisplay();
+
+                    if (currentCountdown <= 0) {
+                        fetchMRTData(); // 倒數結束，獲取資料
+                        currentCountdown = UPDATE_INTERVAL; // 重置倒數為下一個週期
+                    }
+                }, 1000); // 每秒更新
+            }
+
+            /**
+             * 獲取並顯示捷運資料的核心函數
+             */
+            async function fetchMRTData() {
+                const selectedStationCode = stationSelect.value;
+                const proxyUrl = `https://krtc.potatosserver.workers.dev/?station=${selectedStationCode}`;
+
+                manualUpdateButton.disabled = true; // 禁用立即更新按鈕
+                manualUpdateButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+                hideMessageBox(); // 隱藏任何之前的訊息
+
+                try {
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP 錯誤！狀態碼: ${response.status}`);
+                    }
+                    const data = await response.json();
+
+                    if (Object.keys(data).length === 0) {
+                        resultsDisplay.innerHTML = `<p class="text-gray-600 text-center">沒有找到 ${selectedStationCode} 站點的即時資訊。</p>`;
+                        showMessage(`沒有找到 ${selectedStationCode} 站點的即時資訊。`, 'info');
+                    } else {
+                        resultsDisplay.innerHTML = ''; 
+                        resultsDisplay.classList.remove('hidden'); 
+
+                        const table = document.createElement('table');
+                        table.classList.add('min-w-full', 'divide-y', 'divide-blue-200', 'rounded-lg', 'overflow-hidden'); /* Updated styling */
+
+                        const thead = document.createElement('thead');
+                        thead.classList.add('bg-blue-100'); /* Updated styling */
+                        thead.innerHTML = `
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider rounded-tl-lg">起點站</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">終點站</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider rounded-tr-lg">預計抵達時間</th>
+                            </tr>
+                        `;
+                        table.appendChild(thead);
+
+                        const tbody = document.createElement('tbody');
+                        tbody.classList.add('bg-white', 'divide-y', 'divide-blue-100'); /* Updated styling */
+
+                        for (const key in data) {
+                            const [fromStationCode, toStationCode] = key.split('_');
+                            const fromName = stations[fromStationCode] || fromStationCode;
+                            const toName = stations[toStationCode] || toStationCode; 
+                            const value = data[key]; 
+                            const [hours, minutes] = value.split('_'); 
+
+                            let timeDisplay = '';
+                            if (parseInt(hours) > 0) {
+                                timeDisplay = `${hours} 小時 ${minutes} 分鐘`;
+                            } else {
+                                timeDisplay = `${minutes} 分鐘`;
+                            }
+
+                            const row = document.createElement('tr');
+                            row.classList.add('hover:bg-blue-50'); /* Updated styling */
+                            row.innerHTML = `
+                                <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${fromName} (${fromStationCode})</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${toName} (${toStationCode})</td>
+                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${timeDisplay}</td>
+                            `;
+                            tbody.appendChild(row);
+                        }
+                        table.appendChild(tbody);
+                        resultsDisplay.appendChild(table);
+                    }
+                } catch (error) {
+                    console.error('獲取捷運資料失敗:', error);
+                    resultsDisplay.innerHTML = `<p class="text-red-600 text-center">錯誤: 無法獲取捷運資料。<br>${error.message}</p>`;
+                    showMessage(`錯誤: 無法獲取捷運資料。${error.message}`, 'error');
+                } finally {
+                    manualUpdateButton.disabled = false; 
+                    manualUpdateButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+
+            // 立即更新按鈕的事件監聽器
+            manualUpdateButton.addEventListener('click', () => {
+                fetchMRTData(); 
+                startAutoUpdateAndCountdown(); 
+            });
+
+            // 站點選擇器變更時自動查詢
+            stationSelect.addEventListener('change', () => {
+                fetchMRTData(); 
+                startAutoUpdateAndCountdown(); 
+            });
+
+            // 初始化時觸發一次查詢，顯示預設站點的資訊，並啟動自動更新和倒數計時器
+            fetchMRTData();
+            startAutoUpdateAndCountdown();
+        });
+    </script>
+</body>
+</html>
