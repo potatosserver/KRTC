@@ -6,11 +6,14 @@
     <title>高雄捷運查詢器</title>
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入 Inter 字體 -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 引入 Roboto 字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- 引入 Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
+        body {
+            font-family: 'Roboto', sans-serif; /* Change font to Roboto */
+        }
         /* 自定義滾動條樣式 */
         ::-webkit-scrollbar {
             width: 8px;
@@ -33,7 +36,7 @@
                 transform: rotate(0deg);
             }
             to {
-                transform: rotate(-180deg);
+                transform: rotate(180deg); /* Changed to positive 180 degrees */
             }
         }
 
@@ -69,12 +72,11 @@
         <!-- 查詢結果顯示區 -->
         <div class="mt-6 border border-emerald-200 bg-emerald-50 p-4 rounded-xl min-h-[120px] max-h-96 overflow-y-auto relative shadow-inner">
             <h2 class="text-lg font-semibold text-emerald-700 mb-3 border-b-2 border-emerald-300 pb-2">查詢結果:</h2>
-            <!-- 結果將以表格形式顯示在此 -->
-            <!-- 將 results-display 設為可水平滾動，以避免表格內容過長導致頁面溢出 -->
-            <div id="results-display" class="text-gray-800 text-sm overflow-x-auto"></div>
+            <!-- 結果將以非表格形式顯示在此 -->
+            <div id="results-display" class="text-gray-800 text-sm"></div>
             
             <!-- 錯誤/訊息提示框 -->
-            <div id="message-box" class="hidden absolute top-0 left-0 w-full h-full bg-red-100 bg-opacity-90 flex items-center justify-center rounded-xl p-4 text-red-700 text-center font-medium border border-red-300">
+            <div id="message-box" class="hidden absolute top-0 left="0" w-full h-full bg-red-100 bg-opacity-90 flex items-center justify-center rounded-xl p-4 text-red-700 text-center font-medium border border-red-300">
                 <span id="message-text"></span>
                 <button id="close-message" class="absolute top-2 right-2 text-red-600 hover:text-red-800 text-xl font-bold">&times;</button>
             </div>
@@ -113,15 +115,35 @@
                 "R3": "小港", "R4": "高雄國際機場", "R4A": "草衙", "R5": "前鎮高中", "R6": "凱旋",
                 "R7": "獅甲", "R8": "三多商圈", "R9": "中央公園", "R10": "美麗島", "R11": "高雄車站",
                 "R12": "後驛", "R13": "凹子底", "R14": "巨蛋", "R15": "生態園區", "R16": "左營",
-                "R17": "世運", "R19": "楠梓加工區", "R20": "後勁", "R21": "都會公園", "R22": "青埔",
-                "R22A": "橋頭糖廠", "R23": "橋頭火車站", "R24": "岡山高醫","RK1": "岡山車站"
+                "R17": "世運",
+                "R18": "油廠國小", // 新增站點
+                "R19": "楠梓科技園區", // 更改名稱
+                "R20": "後勁",
+                "R21": "都會公園",
+                "R22": "青埔",
+                "R22A": "橋頭糖廠",
+                "R23": "橋頭火車站",
+                "R24": "岡山高醫",
+                "RK1": "岡山車站"
             };
 
             // 高雄捷運橘線站點代碼及其名稱
             const orangeLineStations = {
-                "O1": "西子灣", "O2": "鹽埕埔", "O4": "市議會", "O5": "美麗島", "O6": "信義國小",
-                "O7": "文化中心", "O8": "五塊厝", "O9": "技擊館", "O10": "衛武營", "O11": "鳳山西",
-                "O12": "鳳山", "O13": "大東", "O14": "捷運大寮"
+                "O1": "哈瑪星", // 更改名稱
+                "O2": "鹽埕埔",
+                "O3": "前金", // 新增站點
+                "O4": "市議會",
+                "O5": "美麗島",
+                "O6": "信義國小",
+                "O7": "文化中心",
+                "O8": "五塊厝",
+                "O9": "苓雅運動園區", // 更改名稱
+                "O10": "衛武營",
+                "O11": "鳳山西站", // 更改名稱
+                "O12": "鳳山",
+                "O13": "大東",
+                "O14": "鳳山國中", // 更改名稱
+                "OT1": "大寮" // 新增站點，假設為 O15
             };
 
             // 合併所有站點，用於查詢時的名稱對應
@@ -278,49 +300,52 @@
                         resultsDisplay.innerHTML = ''; 
                         resultsDisplay.classList.remove('hidden'); 
 
-                        const table = document.createElement('table');
-                        table.classList.add('min-w-full', 'divide-y', 'divide-emerald-200', 'rounded-lg', 'overflow-hidden'); /* Updated styling */
-
-                        const thead = document.createElement('thead');
-                        thead.classList.add('bg-emerald-100'); /* Updated styling */
-                        thead.innerHTML = `
-                            <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider rounded-tl-lg">起點站</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider">終點站</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider">預計抵達時間</th>
-                            </tr>
-                        `;
-                        table.appendChild(thead);
-
-                        const tbody = document.createElement('tbody');
-                        tbody.classList.add('bg-white', 'divide-y', 'divide-emerald-100'); /* Updated styling */
+                        // 創建一個容器來存放每個捷運班次的資訊
+                        const trainListContainer = document.createElement('div');
+                        trainListContainer.classList.add('space-y-4'); 
 
                         for (const key in data) {
                             const [fromStationCode, toStationCode] = key.split('_');
-                            // 使用 allStations 來獲取站點名稱
-                            const fromName = allStations[fromStationCode] || fromStationCode;
                             const toName = allStations[toStationCode] || toStationCode; 
                             const value = data[key]; 
-                            const [hours, minutes] = value.split('_'); 
-
-                            let timeDisplay = '';
-                            if (parseInt(hours) > 0) {
-                                timeDisplay = `${hours} 小時 ${minutes} 分鐘`;
+                            
+                            let timeHtml = ''; // 用於最終顯示的 HTML
+                            
+                            if (value === "進站中") {
+                                timeHtml = `<span class="text-3xl">${value}</span>`; // 進站中直接放大
                             } else {
-                                timeDisplay = `${minutes} 分鐘`;
+                                const [hours, minutes] = value.split('_'); 
+                                const parsedHours = parseInt(hours);
+                                const parsedMinutes = parseInt(minutes);
+
+                                if (parsedHours === 0 && parsedMinutes === 0) { // If both hours and minutes are 0
+                                    timeHtml = `<span class="text-3xl">進站中</span>`; // 0小時0分鐘也顯示進站中並放大
+                                } else if (parsedHours > 0) {
+                                    timeHtml = `預計 <span class="text-3xl">${parsedHours}</span> 小時 <span class="text-3xl">${parsedMinutes}</span> 分鐘 到達`;
+                                } else {
+                                    timeHtml = `預計 <span class="text-3xl">${parsedMinutes}</span> 分鐘 到達`;
+                                }
                             }
 
-                            const row = document.createElement('tr');
-                            row.classList.add('hover:bg-emerald-50'); /* Updated styling */
-                            row.innerHTML = `
-                                <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${fromName} (${fromStationCode})</td>
-                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${toName} (${toStationCode})</td>
-                                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">${timeDisplay}</td>
-                            `;
-                            tbody.appendChild(row);
+                            // 創建一個 div 來顯示單個班次的資訊
+                            const trainItem = document.createElement('div');
+                            trainItem.classList.add('bg-white', 'p-4', 'rounded-lg', 'shadow-sm', 'border', 'border-emerald-100', 'flex', 'flex-col', 'gap-y-4'); // Changed gap to gap-y-4
+
+                            // 終點站 (縮小文字)
+                            const toStationDiv = document.createElement('div');
+                            toStationDiv.classList.add('text-sm', 'font-semibold', 'text-gray-900'); // text-sm for smaller
+                            toStationDiv.textContent = `往 ${toName} (${toStationCode})`;
+                            trainItem.appendChild(toStationDiv);
+
+                            // 預計抵達時間 (根據內容動態調整字體大小，並靠右對齊)
+                            const timeDisplayDiv = document.createElement('div');
+                            timeDisplayDiv.classList.add('text-sm', 'text-gray-700', 'text-right'); // Explicitly set text-sm for the container and text-right
+                            timeDisplayDiv.innerHTML = timeHtml; // Use innerHTML to render spans
+                            trainItem.appendChild(timeDisplayDiv);
+
+                            trainListContainer.appendChild(trainItem);
                         }
-                        table.appendChild(tbody);
-                        resultsDisplay.appendChild(table);
+                        resultsDisplay.appendChild(trainListContainer);
                     }
                 } catch (error) {
                     console.error('獲取捷運資料失敗:', error);
