@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入 Inter 字體 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 引入 Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         /* 自定義滾動條樣式 */
         ::-webkit-scrollbar {
@@ -23,6 +25,21 @@
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
+        }
+
+        /* 定義旋轉180度的動畫 */
+        @keyframes rotate-180 {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(-180deg);
+            }
+        }
+
+        /* 應用動畫的類別 */
+        .animate-rotate-once {
+            animation: rotate-180 0.5s ease-out forwards; /* 0.5秒完成，保持最終狀態 */
         }
     </style>
 </head>
@@ -53,7 +70,8 @@
         <div class="mt-6 border border-emerald-200 bg-emerald-50 p-4 rounded-xl min-h-[120px] max-h-96 overflow-y-auto relative shadow-inner">
             <h2 class="text-lg font-semibold text-emerald-700 mb-3 border-b-2 border-emerald-300 pb-2">查詢結果:</h2>
             <!-- 結果將以表格形式顯示在此 -->
-            <div id="results-display" class="text-gray-800 text-sm"></div>
+            <!-- 將 results-display 設為可水平滾動，以避免表格內容過長導致頁面溢出 -->
+            <div id="results-display" class="text-gray-800 text-sm overflow-x-auto"></div>
             
             <!-- 錯誤/訊息提示框 -->
             <div id="message-box" class="hidden absolute top-0 left-0 w-full h-full bg-red-100 bg-opacity-90 flex items-center justify-center rounded-xl p-4 text-red-700 text-center font-medium border border-red-300">
@@ -65,12 +83,7 @@
         <!-- 立即更新按鈕 (現在顯示倒數計時) -->
         <div class="flex justify-center mt-6">
             <button id="manual-update-button" class="w-full max-w-xs bg-emerald-600 text-white py-3 px-6 rounded-full font-semibold hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg">
-                <!-- SVG refresh icon (Updated for better aesthetics) -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M23 4v6h-6"></path>
-                    <path d="M1 20v-6h6"></path>
-                    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"></path>
-                </svg>
+                <span id="refresh-icon" class="material-icons text-2xl">cached</span>
                 <span id="countdown-text">30秒後更新</span>
             </button>
         </div>
@@ -89,6 +102,7 @@
             const messageBox = document.getElementById('message-box');
             const messageText = document.getElementById('message-text');
             const closeMessageButton = document.getElementById('close-message');
+            const refreshIcon = document.getElementById('refresh-icon'); // 獲取刷新圖示元素
 
             let autoUpdateInterval; // 用於儲存自動更新的計時器 ID (現在也負責倒數)
             let currentCountdown = 30; // 追蹤目前的倒數值
@@ -245,6 +259,7 @@
 
                 manualUpdateButton.disabled = true; // 禁用立即更新按鈕
                 manualUpdateButton.classList.add('opacity-50', 'cursor-not-allowed');
+                refreshIcon.classList.add('animate-rotate-once'); // 添加旋轉動畫類別
 
                 hideMessageBox(); // 隱藏任何之前的訊息
 
@@ -272,7 +287,7 @@
                             <tr>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider rounded-tl-lg">起點站</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider">終點站</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider rounded-tr-lg">預計抵達時間</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider">預計抵達時間</th>
                             </tr>
                         `;
                         table.appendChild(thead);
@@ -314,6 +329,8 @@
                 } finally {
                     manualUpdateButton.disabled = false; 
                     manualUpdateButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    // 在動畫完成後移除類別，以便下次點擊時重新觸發
+                    refreshIcon.classList.remove('animate-rotate-once'); 
                 }
             }
 
