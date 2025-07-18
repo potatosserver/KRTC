@@ -8,6 +8,24 @@
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Tailwind CSS 配置，啟用黑暗模式 'class' 策略 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // 啟用基於 class 的黑暗模式
+            theme: {
+                extend: {
+                    // 在這裡可以擴展你的主題，例如定義黑暗模式的顏色
+                    colors: {
+                        darkBg: '#0f172a', // 深色背景 (保持不變)
+                        darkCard: '#1a202c', // 深色卡片背景 (調整為更深的灰藍色)
+                        darkText: '#e2e8f0', // 深色文字 (保持不變)
+                        darkGray: '#94a3b8', // 深色灰色文字 (調整為更柔和的灰藍色)
+                    }
+                }
+            }
+        }
+    </script>
+
     <!-- 引入 Google Fonts (Noto Sans TC) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,11 +39,24 @@
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #f0f4f8; /* 使用更柔和的背景色 */
+            /* 禁用文字選取，提供額外的保護 */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+ */
+            user-select: none; /* Standard syntax */
+        }
+        /* 黑暗模式下的 body 背景色 */
+        .dark body {
+            background-color: #0f172a; /* 調整為與 darkBg 相同，確保一致性 */
         }
 
         /* 卡片漸層背景 */
         .card-gradient {
             background-image: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+        /* 黑暗模式下的卡片背景 */
+        .dark .card-gradient {
+            background-image: linear-gradient(135deg, #1a202c 0%, #2d3748 100%); /* 調整為新的 darkCard 顏色 */
         }
 
         /* 按鈕漸層與動效 */
@@ -48,6 +79,10 @@
             -moz-appearance: none;
             appearance: none;
         }
+        /* 黑暗模式下的下拉選單箭頭顏色 */
+        .dark .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); /* 調整為新的 darkGray */
+        }
 
         /* 讀取中動畫 */
         .loader {
@@ -60,6 +95,11 @@
             box-sizing: border-box;
             animation: rotation 1s linear infinite;
         }
+        /* 黑暗模式下的讀取動畫顏色 */
+        .dark .loader {
+            border-color: #1a202c; /* 調整為新的 darkCard 顏色 */
+            border-bottom-color: #63b3ed; /* 保持較亮的藍色作為強調色 */
+        }
 
         @keyframes rotation {
             0% {
@@ -71,13 +111,13 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 dark:bg-darkBg flex items-center justify-center min-h-screen p-4">
 
     <!-- 主容器 -->
     <div class="w-full max-w-lg mx-auto">
         <!-- 標題 -->
         <div class="flex items-center justify-center gap-3 mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">高雄捷運查詢</h1>
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-darkText">高雄捷運查詢</h1>
         </div>
 
         <!-- 卡片式主體 -->
@@ -85,19 +125,19 @@
             
             <!-- 路線選擇按鈕 -->
             <div class="flex justify-center gap-4 mb-6">
-                <button id="red-line-button" class="px-6 py-3 rounded-full font-semibold text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                <button id="red-line-button" class="px-6 py-3 rounded-full font-semibold text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-red-400">
                     紅線 Red Line
                 </button>
-                <button id="orange-line-button" class="px-6 py-3 rounded-full font-semibold text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500">
+                <button id="orange-line-button" class="px-6 py-3 rounded-full font-semibold text-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:focus:ring-orange-400">
                     橘線 Orange Line
                 </button>
             </div>
 
             <!-- 站點選擇 -->
             <div class="mb-6">
-                <label for="station-select" class="block text-gray-600 text-sm font-medium mb-2">選擇車站</label>
+                <label for="station-select" class="block text-gray-600 dark:text-darkGray text-sm font-medium mb-2">選擇車站</label>
                 <div class="relative">
-                    <select id="station-select" class="custom-select block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white transition duration-200">
+                    <select id="station-select" class="custom-select block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-gray-800 dark:text-darkText bg-white dark:bg-darkCard transition duration-200">
                         <!-- 車站選項將由 JavaScript 動態填充 -->
                     </select>
                 </div>
@@ -106,29 +146,37 @@
             <!-- 查詢結果顯示區 -->
             <div class="mt-4">
                 <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-lg font-semibold text-gray-700">列車動態</h2>
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-darkText">列車動態</h2>
                     <!-- 更新按鈕與倒數計時 -->
-                    <button id="manual-update-button" class="flex items-center gap-2 text-sm text-blue-600 font-medium hover:text-blue-800 transition-colors disabled:opacity-50 disabled:cursor-wait">
+                    <button id="manual-update-button" class="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300 transition-colors disabled:opacity-50 disabled:cursor-wait">
                         <span id="update-icon" class="material-icons text-lg">refresh</span>
                         <span id="countdown-text"></span>
                     </button>
                 </div>
                 
                 <!-- 結果容器 -->
-                <div id="results-display" class="bg-gray-50 p-4 rounded-lg min-h-[240px] max-h-96 overflow-y-auto relative shadow-inner">
+                <div id="results-display" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg min-h-[240px] max-h-96 overflow-y-auto relative shadow-inner">
                     <!-- 初始提示或讀取動畫會顯示在這裡 -->
                 </div>
             </div>
         </div>
         
         <!-- 頁腳資訊 -->
-        <p class="text-center text-gray-500 text-xs mt-6">
+        <p class="text-center text-gray-500 dark:text-darkGray text-xs mt-6">
             <span id="last-updated-time"></span>
         </p>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // 檢查 URL 中的 mode 參數
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('mode') === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
             // DOM 元素
             const redLineButton = document.getElementById('red-line-button');
             const orangeLineButton = document.getElementById('orange-line-button');
@@ -167,13 +215,13 @@
             const updateLineButtonStyles = () => {
                 if (selectedLine === "紅線") {
                     redLineButton.classList.add('bg-red-500', 'text-white', 'shadow-md');
-                    redLineButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-red-100');
-                    orangeLineButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-orange-100');
+                    redLineButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-red-100', 'dark:bg-gray-600', 'dark:text-darkText', 'dark:hover:bg-red-900');
+                    orangeLineButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-orange-100', 'dark:bg-gray-600', 'dark:text-darkText', 'dark:hover:bg-orange-900');
                     orangeLineButton.classList.remove('bg-orange-500', 'text-white', 'shadow-md');
                 } else {
                     orangeLineButton.classList.add('bg-orange-500', 'text-white', 'shadow-md');
-                    orangeLineButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-orange-100');
-                    redLineButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-red-100');
+                    orangeLineButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-orange-100', 'dark:bg-gray-600', 'dark:text-darkText', 'dark:hover:bg-orange-900');
+                    redLineButton.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-red-100', 'dark:bg-gray-600', 'dark:text-darkText', 'dark:hover:bg-red-900');
                     redLineButton.classList.remove('bg-red-500', 'text-white', 'shadow-md');
                 }
             };
@@ -194,7 +242,7 @@
             // 顯示讀取中狀態
             const showLoading = () => {
                 resultsDisplay.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-gray-500">
+                    <div class="flex flex-col items-center justify-center h-full text-gray-500 dark:text-darkGray">
                         <div class="loader mb-4"></div>
                         <p>資料載入中，請稍候...</p>
                     </div>
@@ -204,11 +252,11 @@
             // 顯示提示訊息 (例如無資料或錯誤)
             const showMessage = (iconName, iconClass, title, text) => {
                 resultsDisplay.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                    <div class="flex flex-col items-center justify-center h-full text-center text-gray-500 dark:text-darkGray">
                         <div class="w-16 h-16 mb-4 flex items-center justify-center">
                             <span class="material-icons text-5xl ${iconClass}">${iconName}</span>
                         </div>
-                        <p class="font-semibold text-gray-700">${title}</p>
+                        <p class="font-semibold text-gray-700 dark:text-darkText">${title}</p>
                         <p class="text-sm">${text}</p>
                     </div>
                 `;
@@ -226,7 +274,7 @@
                 });
 
                 if (sortedData.length === 0) {
-                    showMessage('info', 'text-yellow-500', `目前無列車資訊`, `於 ${stationSelect.options[stationSelect.selectedIndex].text} 站`);
+                    showMessage('info', 'text-yellow-500 dark:text-yellow-400', `目前無列車資訊`, `於 ${stationSelect.options[stationSelect.selectedIndex].text} 站`);
                     return;
                 }
 
@@ -253,28 +301,28 @@
                     // 調整顏色判斷邏輯：僅在進站中顯示為紅色，其餘皆為灰色
                     if (totalMinutes <= 1) {
                         timeDisplay = '進站中';
-                        timeClass = 'text-red-500 font-bold animate-pulse';
+                        timeClass = 'text-red-500 dark:text-red-400 font-bold animate-pulse';
                     } else {
                         timeDisplay = `${minutes} 分`;
-                        timeClass = 'text-gray-700'; // 其他時間皆為灰色
+                        timeClass = 'text-gray-700 dark:text-darkText'; // 其他時間皆為灰色
                     }
 
                     // 決定路線顏色
-                    let lineClass = 'bg-gray-400';
-                    if (lineName === '紅線') lineClass = 'bg-red-500';
-                    else if (lineName === '橘線') lineClass = 'bg-orange-500';
+                    let lineClass = 'bg-gray-400 dark:bg-gray-500';
+                    if (lineName === '紅線') lineClass = 'bg-red-500 dark:bg-red-600';
+                    else if (lineName === '橘線') lineClass = 'bg-orange-500 dark:bg-orange-600';
                     
                     const card = document.createElement('div');
-                    card.className = 'bg-white p-4 rounded-lg shadow-sm mb-3 flex items-center gap-4 transition-transform transform hover:scale-[1.02]';
+                    card.className = 'bg-white dark:bg-darkCard p-4 rounded-lg shadow-sm mb-3 flex items-center gap-4 transition-transform transform hover:scale-[1.02]';
                     card.innerHTML = `
                         <div class="flex-shrink-0 w-2 h-16 rounded-full ${lineClass}"></div>
                         <div class="flex-grow">
                             <div class="flex justify-between items-baseline">
-                                <p class="text-sm text-gray-500">開往</p>
+                                <p class="text-sm text-gray-500 dark:text-darkGray">開往</p>
                                 <p class="text-lg font-bold ${timeClass}">${timeDisplay}</p>
                             </div>
-                            <p class="text-xl font-semibold text-gray-800">${toName}</p>
-                            <p class="text-xs text-gray-400">${toStationCode}</p>
+                            <p class="text-xl font-semibold text-gray-800 dark:text-darkText">${toName}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500">${toStationCode}</p>
                         </div>
                     `;
                     fragment.appendChild(card);
@@ -326,7 +374,7 @@
                 if (!selectedStationCode) {
                     showMessage(
                         'tag_faces',
-                        'text-blue-500',
+                        'text-blue-500 dark:text-blue-400',
                         '請選擇車站',
                         '請先從上方選單選擇一條路線和一個車站。'
                     );
@@ -354,7 +402,7 @@
 
                 } catch (error) {
                     console.error('獲取捷運資料失敗:', error);
-                    showMessage('warning', 'text-red-500', '資料獲取失敗', '請檢查網路連線或稍後再試。');
+                    showMessage('warning', 'text-red-500 dark:text-red-400', '資料獲取失敗', '請檢查網路連線或稍後再試。');
                 } finally {
                     manualUpdateButton.disabled = false;
                     updateIcon.classList.remove('animate-spin');
@@ -385,6 +433,15 @@
             updateLineButtonStyles(); // 設定初始按鈕樣式
             populateStationSelect(); // 根據預設路線填充車站
             fetchMRTData(true);
+
+            // 禁用右鍵選單
+            document.addEventListener('contextmenu', event => event.preventDefault());
+
+            // 禁用文字選取 (CSS 已經處理，這裡作為額外保護)
+            document.addEventListener('selectstart', event => event.preventDefault());
+
+            // 禁用拖曳
+            document.addEventListener('dragstart', event => event.preventDefault());
         });
     </script>
 </body>
