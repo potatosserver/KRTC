@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>高雄捷運即時動態查詢</title>
+
+    <!-- ✨ 新增：防止深色模式閃爍的腳本 -->
+    <script>
+        // 在頁面渲染前立即執行，根據 URL 參數設定主題，以避免閃爍。
+        // 使用 IIFE (立即調用函式表達式) 來避免污染全域作用域。
+        (function() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('mode') === 'dark') {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) {
+                // 如果發生錯誤則不做任何事，確保頁面能正常載入
+                console.error("Initial theme setting failed:", e);
+            }
+        })();
+    </script>
     
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -169,13 +186,15 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // 檢查 URL 中的 mode 參數
+            // ✨ 移除：原本檢查 URL 參數的程式碼區塊已移至 <head>
+            /*
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('mode') === 'dark') {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
             }
+            */
 
             // DOM 元素
             const redLineButton = document.getElementById('red-line-button');
